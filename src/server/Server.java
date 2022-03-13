@@ -56,6 +56,7 @@ public class Server{
     protected void disconnect(ServerThread client){
         System.out.println("A connection has lost: " + client.getUsername());
         clients.remove(client);
+        deque.remove(client);
     }
 
     protected void distributeMsg(ServerThread client, String msg){

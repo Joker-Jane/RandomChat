@@ -61,7 +61,9 @@ public class ServerThread extends Thread{
 
     protected void out(String str){
         try {
-            str += "\n";
+            if(str.charAt(str.length() - 1) != '\n'){
+                str += "\n";
+            }
             output.write(str.getBytes());
             output.flush();
         } catch (IOException e) {
