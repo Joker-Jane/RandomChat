@@ -18,4 +18,8 @@ public class Pair {
     protected void sendMsg(ServerThread client, String str){
         getOther(client).out(str + "\n");
     }
+
+    protected void disconnect(ServerThread client){
+        getOther(client).removePair();
+    }
 }

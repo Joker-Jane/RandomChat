@@ -31,18 +31,17 @@ public class Server{
 
     private void connect() throws IOException {
         Socket socket = serverSocket.accept();
-        ServerThread client = establishConnection(socket);
+        establishConnection(socket);
     }
 
-    private ServerThread establishConnection(Socket socket){
+    private void establishConnection(Socket socket){
         ServerThread client = new ServerThread(this, socket);
         System.out.println("A connection has established: " + client.getUsername());
         clients.add(client);
         client.start();
-        return client;
     }
 
-    protected void addToQueue(ServerThread client){
+    protected void searchPair(ServerThread client){
         deque.push(client);
         if(deque.size() >= 2){
             makePair(deque.poll(), deque.poll());
@@ -50,7 +49,7 @@ public class Server{
     }
 
     protected void makePair(ServerThread client1, ServerThread client2){
-        Pair pair = new Pair(client1, client2);
+        new Pair(client1, client2);
         System.out.println("A pair has been made: " + client1.getUsername() + " " + client2.getUsername());
     }
 

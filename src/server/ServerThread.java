@@ -2,7 +2,6 @@ package server;
 
 import java.io.*;
 import java.net.Socket;
-import java.nio.charset.StandardCharsets;
 
 public class ServerThread extends Thread{
     private Server server;
@@ -29,44 +28,57 @@ public class ServerThread extends Thread{
     private void init() throws IOException {
         output = socket.getOutputStream();
         input = socket.getInputStream();
-        reader = new BufferedReader(new InputStreamReader(input, StandardCharsets.UTF_8));
-        out("Connection established\n");
-        server.addToQueue(this);
+        reader = new BufferedReader(new InputStreamReader(input));
+        out("Connection established, your id is " + getUsername());
+        out("Searching for your mate, please wait");
+        server.searchPair(this);
         while(!socket.isClosed()){
             loop();
         }
     }
 
-    private void loop() throws IOException {
+    private void loop(){
         in();
     }
 
-    private void in() throws IOException {
-        String msg = reader.readLine();
-        if(msg == null){
+    private void in(){
+        try {
+            String msg = reader.readLine();
+            if(msg == null){
+                close();
+                return;
+            }
+            if(pair != null){
+                pair.sendMsg(this, format(msg));
+                System.out.println(format(msg));
+            }else{
+                out("Searching for your mate, please wait");
+            }
+        } catch (IOException e) {
             close();
-            return;
-        }
-        if(pair != null){
-            pair.sendMsg(this, format(msg));
-            System.out.println(format(msg));
-        }else{
-            out("Searching for your mate, please wait\n");
         }
     }
 
     protected void out(String str){
         try {
+            str += "\n";
             output.write(str.getBytes());
             output.flush();
         } catch (IOException e) {
-            e.printStackTrace();
+            close();
         }
     }
 
-    private void close() throws IOException {
-        socket.close();
+    private void close(){
+        try {
+            socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         server.disconnect(this);
+        if(pair != null){
+            pair.disconnect(this);
+        }
     }
 
     public String getUsername(){
@@ -75,7 +87,13 @@ public class ServerThread extends Thread{
 
     protected void setPair(Pair pair){
         this.pair = pair;
-        out("Your mate is " + pair.getOther(this).getUsername() + "\n");
+        out("Your mate is " + pair.getOther(this).getUsername());
+    }
+
+    protected void removePair(){
+        out("Your mate has disconnected, searching for your new mate");
+        pair = null;
+        server.searchPair(this);
     }
 
     private String format(String raw){
